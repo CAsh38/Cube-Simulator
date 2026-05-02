@@ -1,0 +1,168 @@
+Task2:
+    La crearea paralelipipedului mai intai se face parsing.
+    Daca paralelipipedul iese inafara chunk-ului acesta este taiat astfel incat sa incape
+    Se face astfel update la coordonate ale punctelor de pe diagonala paralelipipedului
+Task3:
+    Se face check al fiecarui block din chunk
+    Daca distanta de la acesta si centrul sferei este mai mica sau egala decat raza
+    care se calculeaza prin formula sqrt(x^2 + y^2 + z^2), unde x y si z sunt distantele pe 
+    axele de coordonate corespunzatoare dintre puncte
+Task4:
+    Se creaza duplicat al chunk-ului.
+    Dupa se trece prin toate block-urile chunk-ului initial
+    Daca acesta este block-ul target in chunk-ul duplicat se adauga coaja in jurul block-ului
+    Se face asa ceva pentru a evita cazul in care target block-ul este acelasi ca shell block-ul
+Task5:
+    Se face o copie a planului XOZ din chunk;
+    Modificarile se fac pe planul duplicat
+    Pointerul la planul duplicat este transmis unei functii recursive care va trece prin
+    toate block-urile target si le va schimba in block-ul de schimbat
+    Numarul de block-uri ce trebuie schimbate in planul XOZ este acelasi numar de apeluri ale 
+    functiei recursive
+Task6: 
+    Tot aceeasi ca si la task5, dar se face duplicat la tot chunk-ul.
+    Functia recursiva va lua in cont si block-urile de deasupra si de jos, asstfel inlocuind 
+    toate block-urile necesare
+Task7:
+    In acest task se face o copie a chunk-ului cu axele inversate
+    La parcurgerea corecta ale block-urilor din chunk se face o copie a chunk-ului cu axele inversate
+    Daca chunk-ul il parcurgem cu i de la 0 la width si dupa cu k de la 0 la depth,
+    copia chunk-ului se parcurge cu k de la depth la 0 si dupa cu i de la 0 la width
+    Daca se parcurge k de la 0 la depth, rezultatul va fi intoarecerea cu -90 grade al chunk-ului
+Task8:
+    Pentru gravitatie au fost implementate mai multe functii
+    -(find_object)O functie recursiva care intoarce inapoi un chunk care contine doar un obiect
+    -(chunk_duplicate_air)O functie care creaza un chunk cu aer
+    -(fall_down_1block)O functie care preia un obiect(un chunk cu un singur tip de block)
+        si intreprinde caderea acestuia cu un block in jos
+        Functia data primeste de-astfel si chunk-ul astfel incat sa se salveza caderea obiectului
+        si in acest masiv
+    -(check_for_joined_objects), functia care cauta prin masivul de obiecte daca exista obiecte
+        care sunt concrescute. Aceasta functie este necesara pentru task-ul 8 input 1. 
+        In cadrul aceste functii se face check pentru fiecare pereche de obiecte
+        Pentru fiecare aceasta pereche de obiecte se face un string de marime height
+        care reprezinta ce s-ar intampla daca intr-un chunk am vea numai aceste doua obiecte
+        si am lua la rand fiecare coloana din chunk ce sta perfect vertical
+        Daca va exista exceptia cand obiectul 1 este suport pentru obiectul 2 si invers aceasta
+        functie are menirea de a face merge intre acele 2 obiecte, de a include toate obiectele
+        ramase intr-un nou masiv de obiecte inafara de cele doua pe care s-a facut merge si
+        stergerea acestora.
+    Se face un masiv mare cu toate obiectele numit TheGangOfObjects un pointer char****
+    Se face check daca sunt obiecte concrescute
+    Atata timp cat se face apel continuu la functia fall_down_1block se trece prin toate obiectele
+    masivului facand check daca acesta poate cadea in jos. Daca acest obiect va avea macar un suport
+    adica macar un block dedesubt acesta nu va cadea.
+Task9:
+    Se face ma intai 2 array-uri care vor contine informatia in format (iarba,23),(piatra,4)
+    primul va contine tipul de block in ordinea necesara iar la doilea runs-urile in format int
+    Se face aparte pentru fiecare element din array-ul char_storage un check
+    Daca int-ul corespunzator din int_storage este intre 0 si 32 se codifica un singur byte
+    Daca int-ul este intre 32 si 4096 se codifica 2 bytes 
+    Daca mai mult de 4096 se codifica cei 2 bytes cu 4096 si dupa se scade din int 4096
+    Procesul se repeta pana cand toate valorile din int_storage vor fi 0
+Task10:
+    Se face pasul invers de la task9, unde se ia fiecare unsigned char din code,
+    se decodifica similar procesului de la 9 si se umple cele 2 array-uri cu datele necesare.
+    Dupa se parcurge fiecare int din int_storage umpland chunk-ul cu block-urile din char_storage
+
+Mentiuni:
+    La fiecare file cu functii, mai putin chunk_gen s-a implentat aceeasi functie care face
+    operatia free() pe toat chunk-ul care vine ca argument
+    Dat fiind ca in chunk.h nu se poate de scris aceasta functie, plus nu stiu ce se va intampla 
+    daca voi include functia intr-un file aparte aceasta apare in toate 3 file-uri sub diferite
+    denumiri
+
+    Chiar daca nu pot demonstra acest lucru, totusi ar fi important de mentionat faptul ca 
+    la toate testele valgrind manual nu am avut nici-un leak. Voi atasa mai jos file-ul main.c
+    si comanda valgrind care am rulat pentru testare
+
+    Cu privinta la coding style, stiu ca ar trebui sa rezolv toate greselile, dar sunt prea lenes
+    sa corectez 300 de greseli manual. Sorry.
+
+    Tema a fost destul de interesanta, multumesc pentru acest exercitiu :)
+
+    Sarbatori fericite celor care citesc acum acest readme.
+
+    An nou fericit, la multi ani!
+
+
+
+
+
+
+
+
+
+
+
+#include <stdio.h>
+
+#include "../libchunk/chunk_gen.c" 
+#include "../libchunk/chunk_process.c"
+#include "../libchunk/chunk_transform.c"
+#include "../libchunk/chunk_compress.c"
+
+void print_chunk(char*** chunk, int width, int height, int depth) {
+    printf("%d\n%d\n%d\n", width, height, depth);
+
+    for (int x = 0; x < width; x++) { 
+        for (int y = height-1; y >= 0; y--) {
+            for (int z = 0; z < depth; z++)
+                printf("%d ", chunk[x][y][z]);
+            printf("\n");
+        }
+        printf("\n");
+    }
+}
+
+char*** read_chunk(int* width, int* height, int* depth) {
+    scanf("%d%d%d", width, height, depth);
+    
+    char*** chunk = malloc(*width * sizeof *chunk);
+    
+    for (int x = 0; x < *width; x++) {
+        chunk[x] = malloc(*height * sizeof **chunk);
+        for (int y = *height-1; y >= 0; y--) {
+            chunk[x][y] = malloc(*depth * sizeof ***chunk);
+
+            for (int z = 0; z < *depth; z++)
+                scanf("%hhd", &chunk[x][y][z]);
+        }
+    }
+
+    return chunk;
+}
+
+int main(void) {
+    int width=0, height=0, depth=0;
+    char*** chunk = read_chunk(&width, &height, &depth);
+
+    // Procesare chunk
+    // chunk = chunk_place_block(chunk, width, height, depth, 3, 2, 3, 2);
+    // chunk = chunk_fill_cuboid(chunk, width, height, depth, 2, -1, 3, -3, 1, -2, 0);
+    // chunk = chunk_fill_sphere(chunk, width, height, depth, 7, 3, 7, 6.5, 2);
+    // chunk = chunk_shell(chunk, width, height, depth, 1, 1);
+    // chunk = chunk_fill_xz(chunk, width, height, depth, 2, 1, 3, 3);
+    // chunk = chunk_fill(chunk, width, height, depth, 1, 1, 1, 3);
+    // chunk = chunk_rotate_y(chunk, width, height, depth);
+
+    // int new_height = height; 
+    // chunk = chunk_apply_gravity(chunk, width, height, depth, &new_height);
+
+    // int copy_width = width;
+    // width = depth;
+    // depth = copy_width;
+
+    int length;
+    unsigned char* vector = chunk_encode(chunk, width, height, depth, &length);
+    // chunk = chunk_decode(vector, width, height, depth);
+    free(vector);
+
+    print_chunk(chunk, width, height, depth);
+    free_chunk_compress(chunk, width, height);
+    // every chunk, and any use of calloc or malloc must be freed(every single one)
+    
+    return 0;
+}
+
+user-ul_anonim@masina_anonima:~/PCLP/Tema2/tema2-schelet-v6$ valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --error-exitcode=1 --verbose -s build/main < tests/input/task9/2.in
